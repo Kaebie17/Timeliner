@@ -1,49 +1,7 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Professional Indigo Background -->
-  <rect width="512" height="512" rx="128" fill="#4f46e5"/>
-
-  <defs>
-    <!-- Exact head shape used as a ClipPath to ensure beard never overshoots -->
-    <clipPath id="headBoundary">
-      <path d="M42,100 C42,10 250,10 250,100 C250,150 240,185 240,240 C240,285 190,310 146,310 C102,310 52,285 52,240 C52,185 42,150 42,100 Z" />
-    </clipPath>
-  </defs>
-
-  <!-- Tilted Portrait Group: Scaled 1.4x to fill more space while keeping the requested head shape -->
-  <g transform="translate(256, 256) rotate(-12) scale(1.4) translate(-146, -160)">
-    
-    <!-- 1. The Head Silhouette: Exact contour preserved from your code -->
-    <path d="M42,100 C42,10 250,10 250,100 C250,150 240,185 240,240 C240,285 190,310 146,310 C102,310 52,285 52,240 C52,185 42,150 42,100 Z" 
-          stroke="white" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.05"/>
-    
-    <!-- 2. The Ear -->
-    <path d="M250,155 C265,155 275,175 270,195" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.5"/>
-
-    <!-- 3. IVC Style Vertical Beard Ridges -->
-    <!-- Clipped to head boundary. Ridges follow 'U' shape: longer on sides, shorter in middle -->
-    <g clip-path="url(#headBoundary)">
-      <g stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-opacity="0.6">
-        <!-- Parabolic 'U' distribution of vertical lines -->
-        <!-- Left Side (Longer) -->
-        <path d="M60,215 v110 M68,220 v110 M76,225 v110 M84,230 v110 M92,235 v110 M100,240 v110 M108,245 v110 M116,250 v110 M124,255 v110 M132,260 v110" />
-        <!-- Center (Shorter - under mouth area) -->
-        <path d="M140,265 v110 M148,268 v110 M156,265 v110" />
-        <!-- Right Side (Longer) -->
-        <path d="M164,260 v110 M172,255 v110 M180,250 v110 M188,245 v110 M196,240 v110 M204,235 v110 M212,230 v110 M220,225 v110 M228,220 v110 M236,215 v110" />
-      </g>
-    </g>
-
-    <!-- 4. The Iconic Wire-Rim Spectacles -->
-    <g transform="translate(30, 125)">
-      <path d="M0,15 C0,0 95,0 95,15 C95,55 75,75 47.5,75 C20,75 0,55 0,15 Z" stroke="white" stroke-width="12" stroke-linecap="round"/>
-      <path d="M115,15 C115,0 210,0 210,15 C210,55 190,75 162.5,75 C135,75 115,55 115,15 Z" stroke="white" stroke-width="12" stroke-linecap="round"/>
-      <path d="M96,25 C100,10 110,10 114,25" stroke="white" stroke-width="10" stroke-linecap="round"/>
-      <path d="M0,25 H-25" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
-      <path d="M210,25 H235" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
-    </g>
-
-    <!-- 5. Brow Line -->
-    <path d="M80,110 C95,100 115,100 130,110" stroke="white" stroke-width="4" stroke-opacity="0.4" stroke-linecap="round"/>
-    <path d="M165,110 C180,100 200,100 215,110" stroke="white" stroke-width="4" stroke-opacity="0.4" stroke-linecap="round"/>
-  </g>
+  <rect width="512" height="512" rx="120" fill="#4f46e5"/>
+  <path d="M256 120V392" stroke="white" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="256" cy="160" r="30" fill="white"/>
+  <circle cx="256" cy="256" r="45" fill="white" stroke="#4f46e5" stroke-width="12"/>
+  <circle cx="256" cy="352" r="30" fill="white"/>
 </svg>
