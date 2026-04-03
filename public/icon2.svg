@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Professional Indigo Background -->
+  <rect width="512" height="512" rx="128" fill="#4f46e5"/>
+
+  <!-- The "Samajh" Tilted Portrait Group -->
+  <g transform="rotate(-12 256 256) translate(110, 120)">
+    
+    <!-- 1. The Head Silhouette: High-fidelity bald dome and jawline -->
+    <path d="M42,100 C42,10 250,10 250,100 C250,150 240,185 240,240 C240,285 190,310 146,310 C102,310 52,285 52,240 C52,185 42,150 42,100 Z" 
+          stroke="white" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- 2. The Ear (Subtle indicator of tilt/angle) -->
+    <path d="M250,155 C265,155 275,175 270,195" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.5"/>
+
+    <!-- 3. The Beard Line: A clean, minimalist curve defining the lower face -->
+    <path d="M52,210 C70,260 222,260 240,210" stroke="white" stroke-width="6" stroke-opacity="0.3" stroke-linecap="round"/>
+
+    <!-- 4. The Iconic Wire-Rim Spectacles -->
+    <g transform="translate(30, 125)">
+      <!-- Left Lens -->
+      <path d="M0,15 C0,0 95,0 95,15 C95,55 75,75 47.5,75 C20,75 0,55 0,15 Z" 
+            stroke="white" stroke-width="12" stroke-linecap="round"/>
+      
+      <!-- Right Lens -->
+      <path d="M115,15 C115,0 210,0 210,15 C210,55 190,75 162.5,75 C135,75 115,55 115,15 Z" 
+            stroke="white" stroke-width="12" stroke-linecap="round"/>
+      
+      <!-- High Wire Bridge -->
+      <path d="M96,25 C100,10 110,10 114,25" stroke="white" stroke-width="10" stroke-linecap="round"/>
+      
+      <!-- Side Arms -->
+      <path d="M0,25 H-25" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
+      <path d="M210,25 H235" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
+    </g>
+
+    <!-- 5. Brow Line: Suggests the inquisitive expression -->
+    <path d="M80,110 C95,100 115,100 130,110" stroke="white" stroke-width="4" stroke-opacity="0.4" stroke-linecap="round"/>
+    <path d="M165,110 C180,100 200,100 215,110" stroke="white" stroke-width="4" stroke-opacity="0.4" stroke-linecap="round"/>
+  </g>
+</svg>
