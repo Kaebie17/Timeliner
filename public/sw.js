@@ -1,26 +1,20 @@
-const CACHE_NAME = 'ChronologySamajh-v1'; // Change this to 'v2' when you update the app!
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/src/main.js',
-  '/src/style.css',
-  '/icon.svg',
-  '/icon-192.png',
-  '/manifest.json'
-];
+// sw.js
+const CACHE_NAME = 'ChronologySamajh-v3'; // Change this string!
 
-// 1. Install Event: Saves the app files to the phone's memory
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force the waiting service worker to become active
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      return cache.addAll(['/', '/index.html']); // Add your actual file paths here
     })
   );
-  self.skipWaiting();
 });
 
-// 2. Activate Event: Deletes old versions of the app
 self.addEventListener('activate', (event) => {
+  // Take control of all pages immediately
+  event.waitUntil(clients.claim()); 
+  
+  // Delete old caches
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
@@ -30,16 +24,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event: Makes the app work OFFLINE
 self.addEventListener('fetch', (event) => {
+  // Network-first strategy (Recommended during development to avoid cache traps)
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
-// 4. Background Anniversary Logic (Keep this from before)
+// 4. Background Anniversary Logic
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'daily-anniversary-check') {
     event.waitUntil(checkDatesAndNotify());
@@ -47,10 +39,13 @@ self.addEventListener('periodicsync', (event) => {
 });
 
 async function checkDatesAndNotify() {
-  const dbRequest = indexedDB.open("ChronologySamajhDB");
+  // CRITICAL FIX 1: Must match the DB name in your main script!
+  const dbRequest = indexedDB.open("ChronologySamajhDB_v5"); 
+
   dbRequest.onsuccess = (event) => {
     const db = event.target.result;
     if (!db.objectStoreNames.contains('events')) return;
+    
     const transaction = db.transaction("events", "readonly");
     const store = transaction.objectStore("events");
     const getAllReq = store.getAll();
@@ -61,12 +56,14 @@ async function checkDatesAndNotify() {
       const todayMatch = `${today.getMonth() + 1}-${today.getDate()}`;
 
       events.forEach(item => {
+        // CRITICAL FIX 2: Check for 'eventType' instead of 'title'
         if (item.type === 'date' && item.val) {
           const eDate = new Date(item.val);
           const eMatch = `${eDate.getMonth() + 1}-${eDate.getDate()}`;
+          
           if (todayMatch === eMatch) {
             self.registration.showNotification("ChronologySamajh: On This Day", {
-              body: `Anniversary of: ${item.title}`,
+              body: `Anniversary of: ${item.eventType}`, // Changed from item.title
               icon: "/icon-192.png"
             });
           }

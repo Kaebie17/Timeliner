@@ -32,7 +32,6 @@ body {
 
 .hidden { display: none !important; }
 
-/* Header & Navigation */
 header {
   display: flex;
   justify-content: space-between;
@@ -49,17 +48,25 @@ header h1 {
   margin: 0;
 }
 
-/* Form Area */
 .entry-box {
   background: var(--card);
   padding: 20px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  margin-bottom: 40px;
   border: 1px solid #f1f5f9;
 }
 
-#eventForm { display: flex; flex-direction: column; gap: 12px; }
+#eventForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+#eventTypeInput {
+  width: 100%;
+  box-sizing: border-box;
+}
 
 input, select, textarea {
   width: 100%;
@@ -70,9 +77,56 @@ input, select, textarea {
   outline: none;
 }
 
-input:focus { border-color: var(--accent); }
+textarea{
+  height: 40vh;
+}
 
-.row { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  align-items: center;
+}
+
+#dateType {
+  width: 100% 
+}
+
+.input-group {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.data-entry-area {
+  flex: 7; 
+  display: flex;
+  gap: 5px; /* Spacing between digit boxes */
+}
+
+#era {
+  flex: 3;
+  width: 100%;
+}
+
+/* Square Box Styling for Digits */
+.digit-select {
+  flex: 1; /* Distributes boxes equally within the 70% area */
+  text-align: center;
+  padding: 0;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#dateVal {
+  width: 100%; /* Spans the full 70% when visible */
+}
 
 .btn-primary {
   background: var(--primary);
@@ -84,18 +138,6 @@ input:focus { border-color: var(--accent); }
   cursor: pointer;
 }
 
-.btn-secondary {
-  background: #eef2ff;
-  color: var(--primary);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* Library View (Grid of Chronologies) */
 .section-label {
   font-size: 12px;
   font-weight: 800;
@@ -122,17 +164,48 @@ input:focus { border-color: var(--accent); }
   transition: transform 0.2s;
 }
 
-.chrono-card:hover { transform: translateY(-2px); }
+.chrono-card:hover {
+  transform: translateY(-2px);
+}
 
-.card-info h3 { margin: 0; font-size: 18px; color: var(--text-main); }
-.card-info p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); }
+.card-info h3 {
+  margin: 0;
+  font-size: 18px;
+}
 
-.card-actions { display: flex; gap: 8px; }
+.card-info p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
 
-.btn-s { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
-.btn-del { background: #fee2e2; color: #ef4444; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
 
-/* Timeline View */
+.btn-s {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-del {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -167,12 +240,28 @@ input:focus { border-color: var(--accent); }
   border: 4px solid var(--primary);
 }
 
-.timeline-item h4 { margin: 5px 0; font-size: 16px; }
-.timeline-item small { color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 11px; }
+.timeline-item h4 {
+  margin: 5px 0;
+  font-size: 16px;
+}
 
-.text-red { color: #f87171; background: none; border: none; font-size: 12px; cursor: pointer; margin-top: 10px; padding: 0; }
+.timeline-item small {
+  color: var(--primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 11px;
+}
 
-/* Watermark */
+.text-red {
+  color: #f87171;
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+  padding: 0;
+}
+
 #watermark {
   position: absolute;
   top: 50%;
@@ -182,6 +271,5 @@ input:focus { border-color: var(--accent); }
   font-weight: 900;
   color: rgba(0,0,0,0.05);
   pointer-events: none;
-  opacity: 0;
   z-index: -1;
 }

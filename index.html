@@ -13,49 +13,75 @@
 </head>
 <body>
   <div id="app">
-  <header>
-    <h1>Chronology Samajh</h1>
-    <button id="backBtn" class="btn-secondary hidden">← Library</button>
-  </header>
+    <header>
+      <h1>Chronology</h1>
+      <button id="navBtn" class="btn-primary" style="width: auto;">📁 Library</button>
+    </header>
 
-  <!-- Input Area (Always visible at top for quick entry) -->
-  <section class="entry-box">
-    <form id="eventForm">
-      <div class="input-group">
-        <input type="text" id="topicInput" list="topicList" placeholder="Chronology Name (e.g., History)" required>
-        <datalist id="topicList"></datalist>
-        <input type="text" id="eventTitle" placeholder="Event Title" required>
+    <!-- Form Page -->
+    <section id="pageForm">
+      <div class="entry-box">
+        <form id="eventForm">
+          <input type="text" id="eventTypeInput" placeholder="Event Type..." required>
+
+<div class="row">
+  <!-- 1. The Mode Selector -->
+  <select id="dateType">
+    <option value="date">Date</option>
+    <option value="year">Year</option>
+    <option value="century">Century</option>
+  </select>
+
+  <!-- 2. The Group containing 70:30 Logic -->
+  <div class="input-group">
+    
+    <!-- The 70% Area -->
+    <div class="data-entry-area">
+      <!-- Standard Date -->
+      <input type="date" id="dateVal">
+
+      <!-- Year Boxes (Hidden by default) -->
+        <div id="yearInputs" class="hidden" style="display:flex; width:100%; gap:5px;">
+                  <select id="y1" class="digit-select"></select>
+                  <select id="y2" class="digit-select"></select>
+                  <select id="y3" class="digit-select"></select>
+                  <select id="y4" class="digit-select"></select>
+                </div>
+
+                <!-- Century Boxes (Hidden by default) -->
+                <div id="centuryInputs" class="hidden" style="display:flex; width:100%; gap:5px;">
+                  <select id="c1" class="digit-select"></select>
+                  <select id="c2" class="digit-select"></select>
+                </div>
+              </div>
+
+              <!-- The 30% Area -->
+              <select id="era">
+                <option value="CE">CE</option>
+                <option value="BCE">BCE</option>
+              </select>
+            </div>
+          </div>
+          <textarea id="notes" placeholder="Notes / Description..." required></textarea>
+          <button type="submit" class="btn-primary">Add to Chronology</button>
+        </form>
       </div>
-      <div class="row">
-        <select id="dateType">
-          <option value="date">Date</option>
-          <option value="year">Year</option>
-          <option value="century">Century</option>
-        </select>
-        <input type="date" id="dateVal" required>
+    </section>
+
+    <!-- Library Page -->
+    <section id="pageLibrary" class="hidden">
+      <div id="libraryGrid" class="grid"></div>
+    </section>
+
+    <!-- Timeline Page -->
+    <section id="pageTimeline" class="hidden">
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+        <h2 id="displayTitle"></h2>
+        <button id="exportBtn">Export PDF</button>
       </div>
-      <textarea id="desc" placeholder="Notes..."></textarea>
-      <button type="submit" class="btn-primary">Add to Chronology</button>
-    </form>
-  </section>
-
-  <!-- Library View -->
-  <section id="librarySection">
-    <h2 class="section-label">My Chronologies</h2>
-    <div id="libraryGrid" class="grid"></div>
-  </section>
-
-  <!-- Timeline Detail View -->
-  <section id="timelineSection" class="hidden">
-    <div class="detail-header">
-      <h2 id="timelineTitle"></h2>
-      <button id="exportBtn" class="btn-s">Download PDF</button>
-    </div>
-    <div id="timelineDisplay" class="timeline-container">
-      <!-- Watermark and Events -->
-    </div>
-  </section>
-</div>
+      <div id="timelineContent" class="timeline-container"></div>
+    </section>
+  </div>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
