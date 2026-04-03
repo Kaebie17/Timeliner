@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
 // 1. Database Setup
-const db = new Dexie('TimelinerDB');
+const db = new Dexie('ChronologySamajhDB');
 db.version(1).stores({ events: '++id, timestamp' });
 
 const form = document.getElementById('eventForm');
@@ -95,7 +95,7 @@ document.getElementById('exportBtn').onclick = async () => {
   const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
   pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  pdf.save('Timeliner-Export.pdf');
+  pdf.save('ChronologySamajh-Export.pdf');
 };
 
 // 6. Notifications
