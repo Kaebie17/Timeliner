@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeliner</title>
+  <link rel="stylesheet" href="src/style.css">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Timeliner</h1>
+      <button id="exportBtn" class="btn-secondary">Download PDF</button>
+    </header>
+
+    <form id="eventForm">
+      <input type="text" id="title" placeholder="Event Title" required>
+      <div class="row">
+        <select id="dateType">
+          <option value="date">Date</option>
+          <option value="year">Year</option>
+          <option value="century">Century</option>
+        </select>
+        <input type="date" id="dateInput" required>
+      </div>
+      <textarea id="desc" placeholder="Notes..."></textarea>
+      <button type="submit" class="btn-primary">Add to Timeline</button>
+    </form>
+
+    <div id="timeline" class="timeline-container">
+      <div id="watermark">TIMELINER</div>
+      <!-- Events will be injected here by JS -->
+    </div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
