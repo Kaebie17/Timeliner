@@ -1,132 +1,150 @@
+import './style.css';
 import Dexie from 'dexie';
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
-// 1. Database Setup
 const db = new Dexie('ChronologySamajhDB');
-db.version(1).stores({ events: '++id, timestamp' });
+db.version(3).stores({ events: '++id, topic, timestamp' });
 
-const form = document.getElementById('eventForm');
-const timeline = document.getElementById('timeline');
-const dateType = document.getElementById('dateType');
-const dateInput = document.getElementById('dateInput');
+// State Management
+let currentView = 'library'; // 'library' or 'timeline'
+let activeTopic = '';
 
-// 2. Handle Date Input Changes
-dateType.addEventListener('change', () => {
-  dateInput.type = dateType.value === 'date' ? 'date' : 'number';
-  dateInput.placeholder = dateType.value === 'year' ? 'YYYY' : 'Century (e.g. 21)';
-});
+const app = {
+  init() {
+    this.bindEvents();
+    this.render();
+  },
 
-// 3. Save Data
-form.onsubmit = async (e) => {
-  e.preventDefault();
-  const val = dateInput.value;
-  
-  // Create a timestamp for sorting
-  let ts = 0;
-  if (dateType.value === 'date') ts = new Date(val).getTime();
-  else if (dateType.value === 'year') ts = new Date(val, 0, 1).getTime();
-  else ts = (parseInt(val) - 1) * 100 * 31536000000;
-
-  await db.events.add({
-    title: document.getElementById('title').value,
-    type: dateType.value,
-    val: val,
-    desc: document.getElementById('desc').value,
-    timestamp: ts
-  });
-  
-  form.reset();
-  render();
-};
-
-// 4. Render UI
-async function render() {
-  const events = await db.events.orderBy('timestamp').toArray();
-  const watermark = document.getElementById('watermark');
-  timeline.innerHTML = '';
-  timeline.appendChild(watermark);
-
-  events.forEach(event => {
-    const card = document.createElement('div');
-    card.className = 'event-card';
-    card.innerHTML = `
-      <small style="color: var(--primary); font-weight: bold">${event.val}</small>
-      <h3 style="margin: 5px 0">${event.title}</h3>
-      <p style="font-size: 14px; color: #64748b">${event.desc}</p>
-      <button class="delete-btn" data-id="${event.id}">Remove</button>
-    `;
-    timeline.appendChild(card);
-  });
-}
-
-// 5. Delete & PDF Logic
-timeline.addEventListener('click', async (e) => {
-  if (e.target.classList.contains('delete-btn')) {
-    await db.events.delete(Number(e.target.dataset.id));
-    render();
-  }
-});
-
-document.getElementById('exportBtn').onclick = async () => {
-  const timeline = document.getElementById('timeline');
-  const watermark = document.getElementById('watermark');
-
-  // 1. "Flash" the watermark on for the capture
-  // 0.08 is subtle but readable in a printed PDF
-  watermark.style.opacity = '0.08'; 
-
-  // 2. Capture the timeline with High Quality settings
-  const canvas = await html2canvas(timeline, {
-    scale: 2, // Doubles the resolution (Retina quality)
-    backgroundColor: '#f8fafc', // Matches your new CSS --bg
-    useCORS: true, // Helps if you ever add external images
-    logging: false
-  });
-
-  // 3. Hide the watermark again immediately
-  watermark.style.opacity = '0';
-
-  // 4. Create the PDF
-  const imgData = canvas.toDataURL('image/png');
-  const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-  
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  pdf.save('ChronologySamajh-Export.pdf');
-};
-
-// 6. Notifications
-async function setupPWA() {
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      
-      // 1. Request Permission
-      if (Notification.permission === 'default') {
-        await Notification.requestPermission();
+  bindEvents() {
+    document.getElementById('eventForm').onsubmit = (e) => this.saveEvent(e);
+    document.getElementById('backBtn').onclick = () => { currentView = 'library'; this.render(); };
+    document.getElementById('exportBtn').onclick = () => this.exportPDF();
+    
+    // Listen for clicks on the Library or Timeline
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('view-chrono')) {
+        activeTopic = e.target.dataset.topic;
+        currentView = 'timeline';
+        this.render();
       }
-
-      // 2. Register Background Check
-      if ('periodicSync' in registration) {
-        const status = await navigator.permissions.query({
-          name: 'periodic-background-sync',
-        });
-
-        if (status.state === 'granted') {
-          await registration.periodicSync.register('daily-anniversary-check', {
-            minInterval: 24 * 60 * 60 * 1000, // Check once a day
-          });
-        }
+      if (e.target.classList.contains('del-chrono')) {
+        this.deleteChronology(e.target.dataset.topic);
       }
-    } catch (err) {
-      console.log('PWA Setup failed:', err);
+      if (e.target.classList.contains('delete-event')) {
+        this.deleteEvent(e.target.dataset.id);
+      }
+    });
+  },
+
+  async saveEvent(e) {
+    e.preventDefault();
+    const topic = document.getElementById('topicInput').value.trim();
+    const title = document.getElementById('eventTitle').value.trim();
+    const type = document.getElementById('dateType').value;
+    const val = document.getElementById('dateVal').value;
+    const desc = document.getElementById('desc').value;
+
+    let ts = 0;
+    if (type === 'date') ts = new Date(val).getTime();
+    else if (type === 'year') ts = new Date(val, 0, 1).getTime();
+    else ts = (parseInt(val) - 1) * 100 * 31536000000;
+
+    await db.events.add({ topic, title, type, val, desc, timestamp: ts });
+    
+    document.getElementById('eventForm').reset();
+    currentView = 'timeline';
+    activeTopic = topic;
+    this.render();
+  },
+
+  async deleteChronology(topic) {
+    if (confirm(`Delete entire "${topic}" chronology?`)) {
+      await db.events.where('topic').equals(topic).delete();
+      this.render();
     }
+  },
+
+  async deleteEvent(id) {
+    await db.events.delete(Number(id));
+    this.render();
+  },
+
+  async render() {
+    const allEvents = await db.events.toArray();
+    const topics = [...new Set(allEvents.map(e => e.topic))];
+
+    // Update Topic Memory (Datalist)
+    document.getElementById('topicList').innerHTML = topics.map(t => `<option value="${t}">`).join('');
+
+    const librarySection = document.getElementById('librarySection');
+    const timelineSection = document.getElementById('timelineSection');
+
+    if (currentView === 'library') {
+      librarySection.classList.remove('hidden');
+      timelineSection.classList.add('hidden');
+      this.renderLibrary(topics, allEvents);
+    } else {
+      librarySection.classList.add('hidden');
+      timelineSection.classList.remove('hidden');
+      this.renderTimeline();
+    }
+  },
+
+  renderLibrary(topics, allEvents) {
+    const container = document.getElementById('libraryGrid');
+    container.innerHTML = topics.length ? '' : '<p class="empty">No chronologies built yet.</p>';
+
+    topics.forEach(topic => {
+      const count = allEvents.filter(e => e.topic === topic).length;
+      const card = document.createElement('div');
+      card.className = 'chrono-card';
+      card.innerHTML = `
+        <div class="card-info">
+          <h3>${topic}</h3>
+          <p>${count} Events recorded</p>
+        </div>
+        <div class="card-actions">
+          <button class="view-chrono btn-s" data-topic="${topic}">Expand</button>
+          <button class="del-chrono btn-del" data-topic="${topic}">Delete</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  },
+
+  async renderTimeline() {
+    const events = await db.events.where('topic').equals(activeTopic).sortBy('timestamp');
+    document.getElementById('timelineTitle').innerText = activeTopic;
+    const container = document.getElementById('timelineDisplay');
+    container.innerHTML = '<div id="watermark">CHRONOLOGY SAMAJH</div>';
+
+    events.forEach(ev => {
+      const item = document.createElement('div');
+      item.className = 'timeline-item';
+      item.innerHTML = `
+        <div class="dot"></div>
+        <div class="content">
+          <small>${ev.val}</small>
+          <h4>${ev.title}</h4>
+          <p>${ev.desc}</p>
+          <button class="delete-event text-red" data-id="${ev.id}">Remove</button>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+  },
+
+  async exportPDF() {
+    const el = document.getElementById('timelineDisplay');
+    document.getElementById('watermark').style.opacity = '0.08';
+    const canvas = await html2canvas(el, { scale: 2 });
+    document.getElementById('watermark').style.opacity = '0';
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    pdf.addImage(imgData, 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
+    pdf.save(`${activeTopic}-Timeline.pdf`);
   }
-}
+};
 
-setupPWA();
-
-render();
+app.init();

@@ -13,30 +13,49 @@
 </head>
 <body>
   <div id="app">
-    <header>
-      <h1>Chronology Samajh</h1>
-      <button id="exportBtn" class="btn-secondary">Download PDF</button>
-    </header>
+  <header>
+    <h1>Chronology Samajh</h1>
+    <button id="backBtn" class="btn-secondary hidden">← Library</button>
+  </header>
 
+  <!-- Input Area (Always visible at top for quick entry) -->
+  <section class="entry-box">
     <form id="eventForm">
-      <input type="text" id="title" placeholder="Event Title" required>
+      <div class="input-group">
+        <input type="text" id="topicInput" list="topicList" placeholder="Chronology Name (e.g., History)" required>
+        <datalist id="topicList"></datalist>
+        <input type="text" id="eventTitle" placeholder="Event Title" required>
+      </div>
       <div class="row">
         <select id="dateType">
           <option value="date">Date</option>
           <option value="year">Year</option>
           <option value="century">Century</option>
         </select>
-        <input type="date" id="dateInput" required>
+        <input type="date" id="dateVal" required>
       </div>
       <textarea id="desc" placeholder="Notes..."></textarea>
-      <button type="submit" class="btn-primary">Add to Timeline</button>
+      <button type="submit" class="btn-primary">Add to Chronology</button>
     </form>
+  </section>
 
-    <div id="timeline" class="timeline-container">
-      <div id="watermark">TIMELINER</div>
-      <!-- Events will be injected here by JS -->
+  <!-- Library View -->
+  <section id="librarySection">
+    <h2 class="section-label">My Chronologies</h2>
+    <div id="libraryGrid" class="grid"></div>
+  </section>
+
+  <!-- Timeline Detail View -->
+  <section id="timelineSection" class="hidden">
+    <div class="detail-header">
+      <h2 id="timelineTitle"></h2>
+      <button id="exportBtn" class="btn-s">Download PDF</button>
     </div>
-  </div>
+    <div id="timelineDisplay" class="timeline-container">
+      <!-- Watermark and Events -->
+    </div>
+  </section>
+</div>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
