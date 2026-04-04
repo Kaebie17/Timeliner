@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,61 +12,79 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Chronology Samajh">
 </head>
+
 <body>
   <div id="app">
     <header>
-      <h1>Chronology</h1>
+      <h1>Chronology Samajh</h1>
       <button id="navBtn" class="btn-primary" style="width: auto;">📁 Library</button>
     </header>
 
     <!-- Form Page -->
-    <section id="pageForm">
-      <div class="entry-box">
-        <form id="eventForm">
-          <input type="text" id="eventTypeInput" placeholder="Event Type..." required>
+    <div class="entry-box">
+      <form id="eventForm">
+        <!-- 1. COLLECTION NAME (Searchable) -->
+        <label class="section-label">Collection Name</label>
+        <div class="topic-wrapper">
+          <input type="text" id="eventTypeInput" placeholder="e.g., Birthday, Mughal Empire" autocomplete="off"
+            required>
+          <!-- This is the box where your JS will inject the suggestions -->
+          <div id="topicSuggestions" class="suggestions-box"></div>
+        </div>
+        <label class="section-label">Timeline Point</label>
+        <div class="row">
+          <!-- 2. MODE SELECTOR -->
+          <select id="dateType">
+            <option value="date">Exact Date</option>
+            <option value="year">Year</option>
+            <option value="century">Century</option>
+          </select>
 
-<div class="row">
-  <!-- 1. The Mode Selector -->
-  <select id="dateType">
-    <option value="date">Date</option>
-    <option value="year">Year</option>
-    <option value="century">Century</option>
-  </select>
+          <!-- 3. DATA ENTRY AREA (70:30 Split) -->
+          <div class="input-group">
+            <div class="data-entry-area">
+              <!-- Exact Date Input (Changed to text for mobile typing) -->
+              <input type="text" id="dateVal" placeholder="DD-MM-YYYY" inputmode="numeric">
 
-  <!-- 2. The Group containing 70:30 Logic -->
-  <div class="input-group">
-    
-    <!-- The 70% Area -->
-    <div class="data-entry-area">
-      <!-- Standard Date -->
-      <input type="text" id="dateVal" inputmode="numeric" placeholder="DD-MM-YYYY" pattern="\d{2}-\d{2}-\d{4}">
-
-      <!-- Year Boxes (Hidden by default) -->
-        <div id="yearInputs" class="hidden" style="display:flex; width:100%; gap:5px;">
-                  <select id="y1" class="digit-select"></select>
-                  <select id="y2" class="digit-select"></select>
-                  <select id="y3" class="digit-select"></select>
-                  <select id="y4" class="digit-select"></select>
+              <!-- Year Boxes (Hidden by default) -->
+              <div id="yearInputs" class="hidden digit-row">
+                <div class="digit-wrapper"><input type="text" id="y1" maxlength="1" inputmode="numeric">
+                  <div class="picker"></div>
                 </div>
-
-                <!-- Century Boxes (Hidden by default) -->
-                <div id="centuryInputs" class="hidden" style="display:flex; width:100%; gap:5px;">
-                  <select id="c1" class="digit-select"></select>
-                  <select id="c2" class="digit-select"></select>
+                <div class="digit-wrapper"><input type="text" id="y2" maxlength="1" inputmode="numeric">
+                  <div class="picker"></div>
+                </div>
+                <div class="digit-wrapper"><input type="text" id="y3" maxlength="1" inputmode="numeric">
+                  <div class="picker"></div>
+                </div>
+                <div class="digit-wrapper"><input type="text" id="y4" maxlength="1" inputmode="numeric">
+                  <div class="picker"></div>
                 </div>
               </div>
 
-              <!-- The 30% Area -->
-              <select id="era">
-                <option value="CE">CE</option>
-                <option value="BCE">BCE</option>
-              </select>
+              <!-- Century Boxes (Hidden by default) -->
+              <div id="centuryInputs" class="hidden digit-row">
+                <div class="digit-wrapper"><input type="text" id="c1" maxlength="1" inputmode="numeric">
+                  <div class="picker"></div>
+                </div>
+                <div class="digit-wrapper"><input type="text" id="c2" maxlength="1" inputmode="numeric">
+                  <div class="picker"></div>
+                </div>
+              </div>
             </div>
+
+            <!-- 4. ERA SELECTOR (30%) -->
+            <select id="era">
+              <option value="CE">CE</option>
+              <option value="BCE">BCE</option>
+            </select>
           </div>
-          <textarea id="notes" placeholder="Notes / Description..." required></textarea>
-          <button type="submit" class="btn-primary">Add to Chronology</button>
-        </form>
-      </div>
+        </div>
+
+        <textarea id="notes" placeholder="Notes / Description..." required></textarea>
+        <button type="submit" class="btn-primary">Add to Chronology</button>
+      </form>
+    </div>
     </section>
 
     <!-- Library Page -->
@@ -84,4 +103,5 @@
   </div>
   <script type="module" src="src/main.js"></script>
 </body>
+
 </html>

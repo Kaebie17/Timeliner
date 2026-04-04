@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'ChronologySamajh-v3.1'; // Change this string!
+const CACHE_NAME = 'ChronologySamajh-v3.5'; // Change this string!
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Force the waiting service worker to become active
@@ -40,7 +40,7 @@ self.addEventListener('periodicsync', (event) => {
 
 async function checkDatesAndNotify() {
   // CRITICAL FIX 1: Must match the DB name in your main script!
-  const dbRequest = indexedDB.open("ChronologySamajhDB_v5"); 
+  const dbRequest = indexedDB.open("ChronologySamajhDB_v1"); 
 
   dbRequest.onsuccess = (event) => {
     const db = event.target.result;
