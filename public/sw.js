@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'ChronologySamajh-v3.5'; // Change this string!
+const CACHE_NAME = 'ChronologySamajh-v3.6'; // Change this string!
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Force the waiting service worker to become active

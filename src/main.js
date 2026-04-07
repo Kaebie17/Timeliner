@@ -13,6 +13,8 @@ window.db = db;
 // App State
 let view = 'form';
 let activeEventType = '';
+let isSelectionMode = false;
+let selectedTopics = [];
 
 const app = {
   // ---------------------------------------------------------
@@ -83,6 +85,34 @@ const app = {
       }
       this.render();
     };
+
+    // Toggle Merge Selection Mode
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'mergeToggleBtn') {
+        isSelectionMode = !isSelectionMode;
+        selectedTopics = []; // Reset selections
+        this.render();
+      }
+
+      // Handle Checkbox Selections
+      if (e.target.classList.contains('merge-checkbox')) {
+        const topic = e.target.dataset.topic;
+        if (e.target.checked) {
+          selectedTopics.push(topic);
+        } else {
+          selectedTopics = selectedTopics.filter(t => t !== topic);
+        }
+        // Update the "Confirm" button text dynamically
+        const confirmBtn = document.getElementById('confirmMergeBtn');
+        if (confirmBtn) confirmBtn.textContent = `Merge Selected (${selectedTopics.length})`;
+      }
+
+      // Trigger the Merge Action
+      if (e.target.id === 'confirmMergeBtn') {
+        if (selectedTopics.length < 2) return alert("Select at least 2 timelines to merge.");
+        this.handleMergeAction();
+      }
+    });
 
     // PDF Export Button
     const exportBtn = document.getElementById('exportBtn');
@@ -270,12 +300,13 @@ const app = {
 
     // Hide all pages first
     Object.values(pages).forEach(page => {
-      if (page) page.classList.add('hidden');
+      if (page === pages.form) page.parentElement.classList.add('hidden');
+      else page.classList.add('hidden');
     });
 
     // Display current active page
     if (view === 'form' && pages.form) {
-      pages.form.classList.remove('hidden');
+      pages.form.parentElement.classList.remove('hidden');
       navBtn.textContent = "📁 Library";
     }
     else if (view === 'library' && pages.library) {
@@ -292,10 +323,19 @@ const app = {
 
   renderLibrary(eventTypes, allEvents) {
     const grid = document.getElementById('libraryGrid');
-    grid.innerHTML = '';
+    
+    // Create Header for Merge Options
+    const headerHtml = `
+      <div style="display:flex; justify-content:end; align-items:center; margin-bottom:10px;">
+        <button id="mergeToggleBtn" class="btn-s">${isSelectionMode ? 'Cancel Selection' : 'Merge Timelines'}</button>
+        ${isSelectionMode ? `<button id="confirmMergeBtn" class="btn-primary btn-s">Merge Selected (0)</button>` : ''}
+      </div>
+    `;
+
+    grid.innerHTML = headerHtml;
 
     if (eventTypes.length === 0) {
-      grid.innerHTML = '<p class="section-label">No collections yet. Add your first event.</p>';
+      grid.innerHTML += '<p class="section-label">No collections yet.</p>';
       return;
     }
 
@@ -304,19 +344,63 @@ const app = {
       const card = document.createElement('div');
       card.className = 'chrono-card';
       card.innerHTML = `
-                <div class="card-info">
-                    <h3>${et}</h3>
-                    <p>${count} events</p>
-                </div>
-                <div class="card-actions">
-                    <button class="view-chrono btn-primary btn-s" data-type="${et}">Expand</button>
-                    <button class="del-chrono btn-del btn-s" data-type="${et}">Delete</button>
-                </div>
-            `;
+        <div style="display:flex; align-items:center; gap:12px;">
+          ${isSelectionMode ? `<input type="checkbox" class="merge-checkbox" data-topic="${et}">` : ''}
+          <div class="card-info">
+            <h3>${et}</h3>
+            <p>${count} events</p>
+          </div>
+        </div>
+        <div class="card-actions">
+          ${!isSelectionMode ? `
+            <button class="view-chrono btn-s" data-type="${et}">Expand</button>
+            <button class="del-chrono btn-del btn-s" data-type="${et}">Delete</button>
+          ` : ''}
+        </div>
+      `;
       grid.appendChild(card);
     });
   },
 
+  async handleMergeAction() {
+    const newName = prompt("Enter a name for the new merged timeline:");
+    if (!newName || newName.trim() === "") return;
+
+    // 1. Fetch all events from selected topics
+    const allEventsToMerge = await db.events
+      .where('eventType')
+      .anyOf(selectedTopics)
+      .toArray();
+
+    // 2. Remove Duplicates (Strict fingerprint check: timestamp + desc)
+    const seen = new Set();
+    const uniqueEvents = [];
+
+    allEventsToMerge.forEach(ev => {
+      const fingerprint = `${ev.timestamp}|${ev.desc.trim()}`;
+      if (!seen.has(fingerprint)) {
+        seen.add(fingerprint);
+        // Create a new copy of the event for the new collection
+        uniqueEvents.push({
+          eventType: newName.trim(),
+          whenVal: ev.whenVal,
+          desc: ev.desc,
+          timestamp: ev.timestamp
+        });
+      }
+    });
+
+    // 3. Bulk Add to Database
+    await db.events.bulkAdd(uniqueEvents);
+
+    // 4. Reset UI
+    alert(`Successfully merged ${selectedTopics.length} timelines into "${newName}"`);
+    isSelectionMode = false;
+    selectedTopics = [];
+    this.updateTopicSuggestions(); // Refresh the suggestions box
+    this.render();
+  },
+  
   async renderTimeline() {
     // Fetch specific data
     const raw = await db.events.where('eventType').equals(activeEventType).toArray();
