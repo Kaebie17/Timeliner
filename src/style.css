@@ -305,3 +305,6 @@ input:focus, select:focus, textarea:focus {
   padding: 10px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;
 }
 .suggestion-item:hover { background: #f8fafc; color: var(--primary); }
+#syncRow.hidden { display: none !important; }
+.btn-sync { background: #ecfdf5; color: #059669; border: 1px solid #10b981; }
+.btn-sync:hover { background: #d1fae5; }

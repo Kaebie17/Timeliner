@@ -3,8 +3,8 @@ import { jsPDF } from "jspdf";
 
 // Initialize Database
 const db = new Dexie('ChronologySamajhDB');
-db.version(1).stores({
-  events: '++id, eventType, timestamp'
+db.version(1.1).stores({
+  events: '++id, eventType, timestamp, isSynced'
 });
 
 // Make db available for repair scripts in the console
@@ -50,6 +50,7 @@ const app = {
 
     // --- NEW: Topic Suggestions Focus ---
     const typeInput = document.getElementById('eventTypeInput');
+    typeInput.addEventListener('blur', (e) => this.checkSmartDefault(e.target.value.trim()));
     const suggestBox = document.getElementById('topicSuggestions');
     typeInput.onfocus = async () => {
       // 1. Fetch the latest topics from the DB first
@@ -144,7 +145,19 @@ const app = {
       }
     });
   },
+  // Function to handle Smart Default checkbox
+  async checkSmartDefault(topic) {
+    const lastEntry = await db.events
+      .where('eventType').equals(topic)
+      .filter(e => e.whenVal.includes('-')) // Only check dated events
+      .reverse()
+      .first();
 
+    const syncCheckbox = document.getElementById('syncToCalendar');
+    if (lastEntry) {
+      syncCheckbox.checked = lastEntry.isSynced || false;
+    }
+  },
   // ---------------------------------------------------------
   // FORM LOGIC
   // ---------------------------------------------------------
@@ -168,6 +181,13 @@ const app = {
       centuryContainer.classList.remove('hidden');
       centuryContainer.style.display = 'flex';
     }
+
+    const syncRow = document.getElementById('syncRow');
+    if (type === 'date') {
+      syncRow.classList.remove('hidden');
+    } else {
+      syncRow.classList.add('hidden');
+    }
   },
 
   async handleSave(e) {
@@ -176,6 +196,7 @@ const app = {
     // 1. Capture Form Inputs
     const eventType = document.getElementById('eventTypeInput').value.trim();
     const dateType = document.getElementById('dateType').value;
+    const isSynced = document.getElementById('syncToCalendar').checked;
     const era = document.getElementById('era').value;
     const desc = document.getElementById('notes').value.trim();
 
@@ -219,8 +240,14 @@ const app = {
       eventType: eventType,
       whenVal: whenVal,
       desc: desc,
-      timestamp: sortScore
+      timestamp: sortScore,
+      isSynced: dateType === 'date' ? isSynced : false
     });
+
+    // If synced, offer immediate download
+    if (dateType === 'date' && isSynced) {
+      this.downloadTimelineICS(eventType);
+    }
 
     // 4. Update UI suggestions for the Search bar
     await this.updateTopicSuggestions();
@@ -323,7 +350,7 @@ const app = {
 
   renderLibrary(eventTypes, allEvents) {
     const grid = document.getElementById('libraryGrid');
-    
+
     // Create Header for Merge Options
     const headerHtml = `
       <div style="display:flex; justify-content:end; align-items:center; margin-bottom:10px;">
@@ -355,11 +382,72 @@ const app = {
           ${!isSelectionMode ? `
             <button class="view-chrono btn-s" data-type="${et}">Expand</button>
             <button class="del-chrono btn-del btn-s" data-type="${et}">Delete</button>
+            <button class="btn-sync btn-s" onclick="app.downloadTimelineICS('${et}')">📅 Sync</button>
           ` : ''}
         </div>
       `;
       grid.appendChild(card);
     });
+  },
+
+  async downloadTimelineICS(topic) {
+    const events = await db.events
+      .where('eventType').equals(topic)
+      .filter(e => e.isSynced === true)
+      .toArray();
+
+    if (events.length === 0) {
+      alert("No events marked for sync in this timeline.");
+      return;
+    }
+
+    let icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Chronology Samajh//Calendar Sync//EN"
+    ];
+
+    const appUrl = window.location.href;
+
+    events.forEach(ev => {
+      // Parse DD-MM-YYYY
+      const parts = ev.whenVal.split(' ')[0].split('-');
+      if (parts.length !== 3) return;
+
+      const dateStr = `${parts[2]}${parts[1]}${parts[0]}`; // YYYYMMDD
+      const cleanDesc = ev.desc.replace(/\n/g, " ").slice(0, 50);
+
+      icsContent.push(
+        "BEGIN:VEVENT",
+        `UID:chrono-${ev.id}@samajh.app`,
+        `DTSTAMP:${dateStr}T090000Z`,
+        `DTSTART;VALUE=DATE:${dateStr}`,
+        `RRULE:FREQ=YEARLY`, // Yearly recurrence
+        `SUMMARY:[Chrono] ${topic} - ${cleanDesc}`,
+        `DESCRIPTION:${ev.desc}\\n\\nView in App: ${appUrl}`,
+        `URL:${appUrl}`,
+        "BEGIN:VALARM",
+        "TRIGGER:-PT0H", // At the time of event
+        "ACTION:DISPLAY",
+        `DESCRIPTION:Anniversary: ${topic}`,
+        "END:VALARM",
+        "END:VEVENT"
+      );
+    });
+
+    icsContent.push("END:VCALENDAR");
+
+    // Create Download
+    const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `${topic}_Anniversaries.ics`;
+    link.click();
+
+    // Crisp Removal Alert
+    setTimeout(() => {
+      alert(`Synced to Calendar! 📅\n\nTo remove these alerts later:\n1. Open your Calendar App.\n2. Search for "[Chrono] ${topic}"\n3. Delete the matching entries.`);
+    }, 500);
   },
 
   async handleMergeAction() {
@@ -400,7 +488,7 @@ const app = {
     this.updateTopicSuggestions(); // Refresh the suggestions box
     this.render();
   },
-  
+
   async renderTimeline() {
     // Fetch specific data
     const raw = await db.events.where('eventType').equals(activeEventType).toArray();
@@ -620,5 +708,7 @@ const app = {
   }
 };
 
+// Allows the 'onclick' in the HTML to find the function
+window.app = app;
 // Start the Application
 app.init();
