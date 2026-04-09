@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 
 // Initialize Database
 const db = new Dexie('ChronologySamajhDB');
-db.version(1.1).stores({
+db.version(1.2).stores({
   events: '++id, eventType, timestamp, isSynced'
 });
 
@@ -391,16 +391,25 @@ const app = {
   },
 
   async downloadTimelineICS(topic) {
+    // 1. SILENT REPAIR: Update old entries for THIS TOPIC only
+    // This finds dated events where 'isSynced' was never set and marks them true
+    await db.events
+      .where('eventType').equals(topic)
+      .filter(e => e.whenVal.includes('-') && e.isSynced === undefined)
+      .modify({ isSynced: true });
+
+    // 2. FETCH: Get all events for this topic marked for sync
     const events = await db.events
       .where('eventType').equals(topic)
-      .filter(e => e.isSynced === true)
+      .filter(e => e.isSynced === true && e.whenVal.includes('-'))
       .toArray();
 
     if (events.length === 0) {
-      alert("No events marked for sync in this timeline.");
+      alert("No dated events found to sync in this timeline.");
       return;
     }
 
+    // 3. GENERATE: Standard ICS file building
     let icsContent = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
@@ -410,10 +419,9 @@ const app = {
     const appUrl = window.location.href;
 
     events.forEach(ev => {
-      // Parse DD-MM-YYYY
       const parts = ev.whenVal.split(' ')[0].split('-');
       if (parts.length !== 3) return;
-
+      
       const dateStr = `${parts[2]}${parts[1]}${parts[0]}`; // YYYYMMDD
       const cleanDesc = ev.desc.replace(/\n/g, " ").slice(0, 50);
 
@@ -422,12 +430,12 @@ const app = {
         `UID:chrono-${ev.id}@samajh.app`,
         `DTSTAMP:${dateStr}T090000Z`,
         `DTSTART;VALUE=DATE:${dateStr}`,
-        `RRULE:FREQ=YEARLY`, // Yearly recurrence
+        `RRULE:FREQ=YEARLY`,
         `SUMMARY:[Chrono] ${topic} - ${cleanDesc}`,
         `DESCRIPTION:${ev.desc}\\n\\nView in App: ${appUrl}`,
         `URL:${appUrl}`,
         "BEGIN:VALARM",
-        "TRIGGER:-PT0H", // At the time of event
+        "TRIGGER:-PT9H", // 9 AM Local Time
         "ACTION:DISPLAY",
         `DESCRIPTION:Anniversary: ${topic}`,
         "END:VALARM",
@@ -437,16 +445,16 @@ const app = {
 
     icsContent.push("END:VCALENDAR");
 
-    // Create Download
+    // 4. TRIGGER DOWNLOAD
     const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar;charset=utf-8" });
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
-    link.download = `${topic}_Anniversaries.ics`;
+    link.download = `${topic.replace(/\s+/g, '_')}_Anniversaries.ics`;
     link.click();
 
-    // Crisp Removal Alert
+    // 5. NOTIFY USER
     setTimeout(() => {
-      alert(`Synced to Calendar! 📅\n\nTo remove these alerts later:\n1. Open your Calendar App.\n2. Search for "[Chrono] ${topic}"\n3. Delete the matching entries.`);
+      alert(`Synced ${events.length} events to Calendar! 📅\n\nTo remove these alerts later:\n1. Open your Calendar App.\n2. Search for "[Chrono] ${topic}"\n3. Delete the matching entries.`);
     }, 500);
   },
 
