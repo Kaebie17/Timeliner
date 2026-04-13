@@ -30,7 +30,9 @@ body {
   padding: 24px;
 }
 
-.hidden { display: none !important;}
+.hidden {
+  display: none !important;
+}
 
 header {
   display: flex;
@@ -68,7 +70,9 @@ header h1 {
   box-sizing: border-box;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid #e2e8f0;
@@ -77,11 +81,17 @@ input, select, textarea {
   outline: none;
 }
 
-textarea{
+input[type="checkbox"] {
+  width: auto;
+}
+
+textarea {
   height: 25vh;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--accent);
 }
 
@@ -94,7 +104,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 #dateType {
-  width: 100% 
+  width: 100%
 }
 
 .input-group {
@@ -104,9 +114,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 .data-entry-area {
-  flex: 7; 
+  flex: 7;
   display: flex;
-  gap: 5px; /* Spacing between digit boxes */
+  gap: 5px;
+  /* Spacing between digit boxes */
 }
 
 #era {
@@ -116,7 +127,8 @@ input:focus, select:focus, textarea:focus {
 
 /* Square Box Styling for Digits */
 .digit-select {
-  flex: 1; /* Distributes boxes equally within the 70% area */
+  flex: 1;
+  /* Distributes boxes equally within the 70% area */
   text-align: center;
   padding: 0;
   font-weight: bold;
@@ -125,7 +137,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 #dateVal {
-  width: 100%; /* Spans the full 70% when visible */
+  width: 100%;
+  /* Spans the full 70% when visible */
 }
 
 .btn-primary {
@@ -138,9 +151,13 @@ input:focus, select:focus, textarea:focus {
   cursor: pointer;
 }
 
-.section-label { 
-  display: block; font-size: 12px; color: #64748b; 
-  margin-bottom: 5px; font-weight: bold; text-transform: uppercase; 
+.section-label {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
 .grid {
@@ -265,46 +282,205 @@ input:focus, select:focus, textarea:focus {
   transform: translate(-50%, -50%) rotate(-45deg);
   font-size: 60px;
   font-weight: 900;
-  color: rgba(0,0,0,0.05);
+  color: rgba(0, 0, 0, 0.05);
   pointer-events: none;
   z-index: -1;
 }
 
 /* Make Year/Century boxes behave as a single row */
-.digit-row { display: flex; gap: 5px; width: 100%; }
+.digit-row {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
 
-.digit-wrapper { position: relative; flex: 1; }
-.digit-wrapper input { width: 100%; text-align: center; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; }
+.digit-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.digit-wrapper input {
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 
 /* The Hanging Picker */
-.picker { 
-  display: none; position: absolute; top: 110%; left: 0; width: 80px; 
-  background: white; border: 1px solid #4f46e5; grid-template-columns: repeat(3, 1fr); 
-  z-index: 100; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+.picker {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 80px;
+  background: white;
+  border: 1px solid #4f46e5;
+  grid-template-columns: repeat(3, 1fr);
+  z-index: 100;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
-.digit-wrapper:focus-within .picker { display: grid; }
-.picker button { border: 1px solid #eee; background: none; padding: 5px; cursor: pointer; font-size: 12px; }
-.picker button:hover { background: #4f46e5; color: white; }
+
+.digit-wrapper:focus-within .picker {
+  display: grid;
+}
+
+.picker button {
+  border: 1px solid #eee;
+  background: none;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.picker button:hover {
+  background: #4f46e5;
+  color: white;
+}
 
 /* Suggestion Dropdown for Collection Name */
-.topic-wrapper { position: relative; width: 100%; }
+.topic-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .suggestions-box {
-  display: none; 
-  position: absolute; 
-  top: 100%; /* REQUIRED: Placed exactly below the input */
-  left: 0; 
+  display: none;
+  position: absolute;
+  top: 100%;
+  /* REQUIRED: Placed exactly below the input */
+  left: 0;
   right: 0;
-  background: white; 
+  background: white;
   border: 1px solid var(--primary);
-  max-height: 200px; 
-  overflow-y: auto; 
-  z-index: 9999 !important; /* REQUIRED: Bring to front */
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999 !important;
+  /* REQUIRED: Bring to front */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 .suggestion-item {
-  padding: 10px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
-.suggestion-item:hover { background: #f8fafc; color: var(--primary); }
-#syncRow.hidden { display: none !important; }
-.btn-sync { background: #ecfdf5; color: #059669; border: 1px solid #10b981; }
-.btn-sync:hover { background: #d1fae5; }
+
+.suggestion-item:hover {
+  background: #f8fafc;
+  color: var(--primary);
+}
+
+#syncRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+#syncRow input[type="checkbox"] {
+  width: 18px !important;
+  /* Overrides the global width: 100% */
+  height: 18px !important;
+  cursor: pointer;
+  margin: 0;
+}
+
+#syncRow label {
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+  font-size: 13px;
+}
+
+#syncRow.hidden {
+  display: none !important;
+}
+
+.btn-sync {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #10b981;
+}
+
+.btn-sync:hover {
+  background: #d1fae5;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  text-decoration: underline;
+  padding: 5px 0;
+}
+
+.bulk-header {
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--slate);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  padding: 0 5px;
+}
+
+.bulk-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.bulk-row input,
+.bulk-row select {
+  border: none !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 4px 0 !important;
+  height: auto !important;
+}
+
+.bulk-row input:focus {
+  border-bottom-color: var(--primary) !important;
+  outline: none;
+}
+
+.bulk-row input.invalid {
+  border-bottom-color: #ef4444 !important;
+}
+
+.bulk-row input[type="checkbox"] {
+  width: auto !important;
+  flex: 0 0 20px;
+  /* Gives it a fixed small space */
+  margin: 0 auto;
+}
+
+.row-remover {
+  color: #ef4444;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0;
+  padding: 0 5px;
+}
+
+.btn-add-row {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  width: 100%;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  color: var(--slate);
+  font-weight: bold;
+  margin-top: 5px;
+}

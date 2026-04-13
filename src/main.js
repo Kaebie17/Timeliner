@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 
 // Initialize Database
 const db = new Dexie('ChronologySamajhDB');
-db.version(1.2).stores({
+db.version(1.3).stores({
   events: '++id, eventType, timestamp, isSynced'
 });
 
@@ -15,6 +15,7 @@ let view = 'form';
 let activeEventType = '';
 let isSelectionMode = false;
 let selectedTopics = [];
+let isBulkMode = false;
 
 const app = {
   // ---------------------------------------------------------
@@ -61,6 +62,42 @@ const app = {
         suggestBox.style.display = 'block';
       }
     };
+
+    document.getElementById('bulkToggleBtn').onclick = () => {
+      isBulkMode = !isBulkMode;
+      const bulkBtn = document.getElementById('bulkToggleBtn');
+      const singleUi = document.getElementById('singleEntryUi');
+      const bulkUi = document.getElementById('bulkEntryUi');
+      const notesArea = document.getElementById('notes');
+      const bulkContainer = document.getElementById('bulkRowContainer');
+
+      bulkBtn.textContent = isBulkMode ? "Single Mode" : "Bulk Mode";
+
+      if (isBulkMode) {
+        // 1. Switching to Bulk: Clear Single data and remove 'required'
+        notesArea.value = "";
+        notesArea.required = false;
+        document.getElementById('dateVal').value = "";
+        ['y1', 'y2', 'y3', 'y4', 'c1', 'c2'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+
+        singleUi.classList.add('hidden');
+        bulkUi.classList.remove('hidden');
+        if (bulkContainer.children.length === 0) this.addBulkRow();
+      } else {
+        // 2. Switching to Single: Delete all bulk rows and restore 'required'
+        bulkContainer.innerHTML = "";
+        notesArea.required = true;
+
+        bulkUi.classList.add('hidden');
+        singleUi.classList.remove('hidden');
+      }
+      document.getElementById('submitBtn').textContent = isBulkMode ? "Save All Entries" : "Add to Chronology";
+    };
+
+    document.getElementById('addBulkRowBtn').onclick = () => this.addBulkRow();
 
     // Mode Selector (Date/Year/Century)
     const dateTypeSelect = document.getElementById('dateType');
@@ -192,71 +229,93 @@ const app = {
 
   async handleSave(e) {
     e.preventDefault();
+    const topic = document.getElementById('eventTypeInput').value.trim();
+    if (!topic) return alert("Please enter a collection name.");
 
-    // 1. Capture Form Inputs
-    const eventType = document.getElementById('eventTypeInput').value.trim();
-    const dateType = document.getElementById('dateType').value;
-    const isSynced = document.getElementById('syncToCalendar').checked;
-    const era = document.getElementById('era').value;
-    const desc = document.getElementById('notes').value.trim();
+    let newEntries = [];
+    let shouldTriggerDownload = false;
 
-    let whenVal = "";
-    let sortScore = 0;
-
-    // 2. Process Input based on Mode
-    if (dateType === 'date') {
-      const val = document.getElementById('dateVal').value; // This is now DD-MM-YYYY
-      whenVal = `${val} ${era}`;
-
-      // Split DD-MM-YYYY to create a valid sorting timestamp
-      const parts = val.split('-');
-      if (parts.length === 3) {
-        // Re-order to YYYY-MM-DD so JavaScript can calculate the timestamp correctly
-        const dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-        sortScore = (dateObj.getTime() || 0) * (era === 'BCE' ? -1 : 1);
+    if (!isBulkMode) {
+      // --- SINGLE MODE LOGIC ---
+      const dateType = document.getElementById('dateType').value;
+      // Manual Date Validation Alert
+      if (dateType === 'date' && !document.getElementById('dateVal').value) {
+        return alert("Please enter a valid date (DD-MM-YYYY)");
       }
+      if (dateType === 'year') {
+        const yearCheck = ['y1', 'y2', 'y3', 'y4'].map(id => document.getElementById(id).value).join('');
+        if (yearCheck.length < 4) return alert("Please fill all 4 year boxes.");
+      }
+      if (dateType === 'century') {
+        const centCheck = ['c1', 'c2'].map(id => document.getElementById(id).value).join('');
+        if (centCheck.length < 2) return alert("Please fill both century boxes.");
+      }
+      const era = document.getElementById('era').value;
+      const desc = document.getElementById('notes').value.trim();
+      const isSynced = document.getElementById('syncToCalendar').checked;
+
+      let whenVal = "", sortScore = 0;
+
+      if (dateType === 'date') {
+        const v = document.getElementById('dateVal').value;
+        const p = v.split('-');
+        if (p.length === 3) {
+          const dObj = new Date(`${p[2]}-${p[1]}-${p[0]}`);
+          sortScore = (dObj.getTime() || 0) * (era === 'BCE' ? -1 : 1);
+          whenVal = `${v} ${era}`;
+        }
+        if (isSynced) shouldTriggerDownload = true;
+      }
+      else if (dateType === 'year') {
+        const y = ['y1', 'y2', 'y3', 'y4'].map(id => document.getElementById(id).value).join('') || "0";
+        whenVal = `${parseInt(y)} ${era}`;
+        sortScore = parseInt(y) * (era === 'BCE' ? -1 : 1);
+      }
+      else {
+        const c = ['c1', 'c2'].map(id => document.getElementById(id).value).join('') || "0";
+        whenVal = `${parseInt(c)}th Century ${era}`;
+        sortScore = (parseInt(c) * 100) * (era === 'BCE' ? -1 : 1);
+      }
+
+      newEntries.push({ eventType: topic, whenVal, desc, timestamp: sortScore, isSynced: dateType === 'date' ? isSynced : false });
+
+    } else {
+      // --- BULK MODE LOGIC ---
+      const rows = document.querySelectorAll('.bulk-row');
+      rows.forEach(row => {
+        const dVal = row.querySelector('.b-date').value;
+        const era = row.querySelector('.b-era').value;
+        const sync = row.querySelector('.b-sync').checked;
+        const rowDesc = row.querySelector('.b-notes').value.trim();
+
+        const p = this.parseSmartDate(dVal, era);
+        if (p.isValid && rowDesc) {
+          if (sync) shouldTriggerDownload = true;
+          newEntries.push({ eventType: topic, whenVal: p.whenVal, desc: rowDesc, timestamp: p.timestamp, isSynced: sync });
+        }
+      });
     }
-    else if (dateType === 'year') {
-      const yearStr = ['y1', 'y2', 'y3', 'y4']
-        .map(id => document.getElementById(id).value)
-        .join('');
 
-      const finalYear = parseInt(yearStr || 0);
-      whenVal = `${finalYear} ${era}`;
-      sortScore = finalYear * (era === 'BCE' ? -1 : 1);
+    // --- EXECUTION ---
+    if (newEntries.length > 0) {
+      await db.events.bulkAdd(newEntries);
+
+      if (shouldTriggerDownload) this.downloadTimelineICS(topic);
+
+      await this.updateTopicSuggestions();
+      document.getElementById('eventForm').reset();
+
+      if (isBulkMode) {
+        document.getElementById('bulkRowContainer').innerHTML = "";
+        this.addBulkRow();
+      }
+
+      this.handleDateTypeChange('date');
+      this.render();
+      alert(`Saved ${newEntries.length} entries to ${topic}`);
+    } else {
+      alert("Please ensure dates are correct (Ex: 5, 1526, or 01-01-2000)");
     }
-    else if (dateType === 'century') {
-      const centuryStr = ['c1', 'c2']
-        .map(id => document.getElementById(id).value)
-        .join('');
-
-      const finalCentury = parseInt(centuryStr || 0);
-      whenVal = `${finalCentury}th Century ${era}`;
-      sortScore = (finalCentury * 100) * (era === 'BCE' ? -1 : 1);
-    }
-
-    // 3. Save to Database (using synchronized keys)
-    await db.events.add({
-      eventType: eventType,
-      whenVal: whenVal,
-      desc: desc,
-      timestamp: sortScore,
-      isSynced: dateType === 'date' ? isSynced : false
-    });
-
-    // If synced, offer immediate download
-    if (dateType === 'date' && isSynced) {
-      this.downloadTimelineICS(eventType);
-    }
-
-    // 4. Update UI suggestions for the Search bar
-    await this.updateTopicSuggestions();
-
-    // 5. UI Reset
-    document.getElementById('eventForm').reset();
-    this.handleDateTypeChange('date');
-    this.render();
-    // alert("Saved to " + eventType);
   },
 
   // Custom HTML rendering for the hanging suggestions
@@ -421,7 +480,7 @@ const app = {
     events.forEach(ev => {
       const parts = ev.whenVal.split(' ')[0].split('-');
       if (parts.length !== 3) return;
-      
+
       const dateStr = `${parts[2]}${parts[1]}${parts[0]}`; // YYYYMMDD
       const cleanDesc = ev.desc.replace(/\n/g, " ").slice(0, 50);
 
@@ -635,6 +694,62 @@ const app = {
   // ---------------------------------------------------------
   // UTILITIES & HELPERS
   // ---------------------------------------------------------
+  // 1. The Smart Parser Logic
+  parseSmartDate(input, era) {
+    const v = input.trim();
+    let result = { isValid: false, timestamp: 0, whenVal: "" };
+
+    if (/^\d{1,2}$/.test(v)) { // Century (1-2 digits)
+      const c = parseInt(v);
+      result.isValid = true;
+      result.whenVal = `${c}th Century ${era}`;
+      result.timestamp = (c * 100) * (era === 'BCE' ? -1 : 1);
+    }
+    else if (/^\d{4}$/.test(v)) { // Year (4 digits)
+      const y = parseInt(v);
+      result.isValid = true;
+      result.whenVal = `${y} ${era}`;
+      result.timestamp = y * (era === 'BCE' ? -1 : 1);
+    }
+    else if (/^\d{2}-\d{2}-\d{4}$/.test(v)) { // Date (DD-MM-YYYY)
+      const [d, m, y] = v.split('-');
+      const dateObj = new Date(`${y}-${m}-${d}`);
+      if (!isNaN(dateObj.getTime())) {
+        result.isValid = true;
+        result.whenVal = `${v} ${era}`;
+        result.timestamp = dateObj.getTime() * (era === 'BCE' ? -1 : 1);
+      }
+    }
+    return result;
+  },
+
+  // 2. Bulk Row Generator
+  addBulkRow() {
+    const container = document.getElementById('bulkRowContainer');
+    const row = document.createElement('div');
+    row.className = 'bulk-row';
+
+    // Check if the overall collection was synced before for smart default
+    const shouldSync = document.getElementById('syncToCalendar').checked;
+
+    row.innerHTML = `
+        <input type="text" class="b-date" placeholder="Ex: 5, 1526, 02-04-2026" style="flex: 2;">
+        <select class="b-era" style="flex: 1;"><option value="CE">CE</option><option value="BCE">BCE</option></select>
+        <input type="checkbox" class="b-sync" style="flex: 0.5;" ${shouldSync ? 'checked' : ''}>
+        <input type="text" class="b-notes" placeholder="Notes..." style="flex: 4;" required>
+        <p class="row-remover" style="flex: 0.5;">×</p>
+    `;
+
+    const dInput = row.querySelector('.b-date');
+    dInput.oninput = () => {
+      const era = row.querySelector('.b-era').value;
+      const check = this.parseSmartDate(dInput.value, era);
+      dInput.classList.toggle('invalid', !check.isValid && dInput.value !== "");
+    };
+
+    row.querySelector('.row-remover').onclick = () => row.remove();
+    container.appendChild(row);
+  },
   async setupPWA() {
     if ('serviceWorker' in navigator) {
       try {

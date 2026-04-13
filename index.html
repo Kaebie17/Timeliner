@@ -20,76 +20,93 @@
       <button id="navBtn" class="btn-primary" style="width: auto;">📁 Library</button>
     </header>
 
-    <!-- Form Page -->
-    <div class="entry-box">
-      <form id="eventForm">
-        <!-- 1. COLLECTION NAME (Searchable) -->
-        <label class="section-label">Collection Name</label>
-        <div class="topic-wrapper">
-          <input type="text" id="eventTypeInput" placeholder="e.g., Birthday, Mughal Empire" autocomplete="off"
-            required>
-          <!-- This is the box where your JS will inject the suggestions -->
-          <div id="topicSuggestions" class="suggestions-box"></div>
-        </div>
-        <label class="section-label">Timeline Point</label>
-        <div class="row">
-          <!-- 2. MODE SELECTOR -->
-          <select id="dateType">
-            <option value="date">Exact Date</option>
-            <option value="year">Year</option>
-            <option value="century">Century</option>
-          </select>
+    <!-- FORM PAGE -->
+    <section id="">
+      <div class="entry-box">
+        <form id="eventForm">
+          <!-- 1. COLLECTION NAME (Common to both modes) -->
+          <label class="section-label">Collection Name</label>
+          <div class="topic-wrapper">
+            <input type="text" id="eventTypeInput" placeholder="e.g., Birthday, Mughal Empire" autocomplete="off"
+              required>
+            <div id="topicSuggestions" class="suggestions-box"></div>
+          </div>
 
-          <!-- 3. DATA ENTRY AREA (70:30 Split) -->
-          <div class="input-group">
-            <div class="data-entry-area">
-              <!-- Exact Date Input (Changed to text for mobile typing) -->
-              <input type="text" id="dateVal" placeholder="DD-MM-YYYY" inputmode="numeric">
+          <!-- 2. MODE TOGGLE -->
+          <div style="display: flex; justify-content: flex-end; margin-top: -10px;">
+            <button type="button" id="bulkToggleBtn" class="btn-link">Bulk Mode</button>
+          </div>
 
-              <!-- Year Boxes (Hidden by default) -->
-              <div id="yearInputs" class="hidden digit-row">
-                <div class="digit-wrapper"><input type="text" id="y1" maxlength="1" inputmode="numeric">
-                  <div class="picker"></div>
-                </div>
-                <div class="digit-wrapper"><input type="text" id="y2" maxlength="1" inputmode="numeric">
-                  <div class="picker"></div>
-                </div>
-                <div class="digit-wrapper"><input type="text" id="y3" maxlength="1" inputmode="numeric">
-                  <div class="picker"></div>
-                </div>
-                <div class="digit-wrapper"><input type="text" id="y4" maxlength="1" inputmode="numeric">
-                  <div class="picker"></div>
-                </div>
-              </div>
+          <!-- 3. SINGLE ENTRY UI -->
+          <div id="singleEntryUi">
+            <label class="section-label">Timeline Point</label>
+            <div class="row">
+              <select id="dateType">
+                <option value="date">Exact Date</option>
+                <option value="year">Year</option>
+                <option value="century">Century</option>
+              </select>
 
-              <!-- Century Boxes (Hidden by default) -->
-              <div id="centuryInputs" class="hidden digit-row">
-                <div class="digit-wrapper"><input type="text" id="c1" maxlength="1" inputmode="numeric">
-                  <div class="picker"></div>
+              <div class="input-group">
+                <div class="data-entry-area">
+                  <input type="text" id="dateVal" placeholder="DD-MM-YYYY" inputmode="numeric">
+                  <div id="yearInputs" class="hidden digit-row">
+                    <div class="digit-wrapper"><input type="text" id="y1" maxlength="1" inputmode="numeric">
+                      <div class="picker"></div>
+                    </div>
+                    <div class="digit-wrapper"><input type="text" id="y2" maxlength="1" inputmode="numeric">
+                      <div class="picker"></div>
+                    </div>
+                    <div class="digit-wrapper"><input type="text" id="y3" maxlength="1" inputmode="numeric">
+                      <div class="picker"></div>
+                    </div>
+                    <div class="digit-wrapper"><input type="text" id="y4" maxlength="1" inputmode="numeric">
+                      <div class="picker"></div>
+                    </div>
+                  </div>
+                  <div id="centuryInputs" class="hidden digit-row">
+                    <div class="digit-wrapper"><input type="text" id="c1" maxlength="1" inputmode="numeric">
+                      <div class="picker"></div>
+                    </div>
+                    <div class="digit-wrapper"><input type="text" id="c2" maxlength="1" inputmode="numeric">
+                      <div class="picker"></div>
+                    </div>
+                  </div>
                 </div>
-                <div class="digit-wrapper"><input type="text" id="c2" maxlength="1" inputmode="numeric">
-                  <div class="picker"></div>
-                </div>
+                <select id="era">
+                  <option value="CE">CE</option>
+                  <option value="BCE">BCE</option>
+                </select>
               </div>
             </div>
 
-            <!-- 4. ERA SELECTOR (30%) -->
-            <select id="era">
-              <option value="CE">CE</option>
-              <option value="BCE">BCE</option>
-            </select>
+            <!-- Sync for Single Mode -->
+            <div id="syncRow" class="hidden" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="syncToCalendar">
+              <label for="syncToCalendar" style="font-size: 13px; color: var(--primary); font-weight: 600;">🔔 Sync to
+                Device Calendar</label>
+            </div>
+
+            <textarea id="notes" placeholder="Notes / Description..." required></textarea>
           </div>
-        </div>
-        <div id="syncRow" class="hidden" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" id="syncToCalendar" style="width: 18px; height: 18px; cursor: pointer;">
-          <label for="syncToCalendar" style="font-size: 13px; color: var(--primary); font-weight: 600; cursor: pointer;">
-            🔔 Sync to Device Calendar
-          </label>
-        </div>
-        <textarea id="notes" placeholder="Notes / Description..." required></textarea>
-        <button type="submit" class="btn-primary">Add to Chronology</button>
-      </form>
-    </div>
+
+          <!-- 4. BULK ENTRY UI -->
+          <div id="bulkEntryUi" class="hidden">
+            <div class="bulk-header">
+              <span style="flex: 2;">Date/Year/Cent</span>
+              <span style="flex: 1;">Era</span>
+              <span style="flex: 0.5;">Sync</span>
+              <span style="flex: 4;">Notes</span>
+              <span style="flex: 0.5;"></span>
+            </div>
+            <div id="bulkRowContainer"></div>
+            <button type="button" id="addBulkRowBtn" class="btn-add-row">+ Add Event</button>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn-primary" style="margin-top:20px; width: 100%;">Add to
+            Chronology</button>
+        </form>
+      </div>
     </section>
 
     <!-- Library Page -->
