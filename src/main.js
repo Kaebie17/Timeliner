@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 
 // Initialize Database
 const db = new Dexie('ChronologySamajhDB');
-db.version(1.3).stores({
+db.version(1.4).stores({
   events: '++id, eventType, timestamp, isSynced'
 });
 
@@ -238,7 +238,8 @@ const app = {
     if (!isBulkMode) {
       // --- SINGLE MODE LOGIC ---
       const dateType = document.getElementById('dateType').value;
-      // Manual Date Validation Alert
+
+      // Manual Date Validation
       if (dateType === 'date' && !document.getElementById('dateVal').value) {
         return alert("Please enter a valid date (DD-MM-YYYY)");
       }
@@ -250,10 +251,10 @@ const app = {
         const centCheck = ['c1', 'c2'].map(id => document.getElementById(id).value).join('');
         if (centCheck.length < 2) return alert("Please fill both century boxes.");
       }
+
       const era = document.getElementById('era').value;
       const desc = document.getElementById('notes').value.trim();
       const isSynced = document.getElementById('syncToCalendar').checked;
-
       let whenVal = "", sortScore = 0;
 
       if (dateType === 'date') {
@@ -280,42 +281,44 @@ const app = {
       newEntries.push({ eventType: topic, whenVal, desc, timestamp: sortScore, isSynced: dateType === 'date' ? isSynced : false });
 
     } else {
-      // --- BULK MODE LOGIC ---
+      // --- BULK MODE LOGIC (All-or-Nothing) ---
       const rows = document.querySelectorAll('.bulk-row');
-      rows.forEach(row => {
+      if (rows.length === 0) return alert("No entries to save. Add a row first.");
+
+      for (const row of rows) {
         const dVal = row.querySelector('.b-date').value;
         const era = row.querySelector('.b-era').value;
         const sync = row.querySelector('.b-sync').checked;
         const rowDesc = row.querySelector('.b-notes').value.trim();
-
         const p = this.parseSmartDate(dVal, era);
-        if (p.isValid && rowDesc) {
-          if (sync) shouldTriggerDownload = true;
-          newEntries.push({ eventType: topic, whenVal: p.whenVal, desc: rowDesc, timestamp: p.timestamp, isSynced: sync });
+
+        // If even one row is invalid, stop everything
+        if (!p.isValid || !rowDesc) {
+          row.querySelector('.b-date').classList.toggle('invalid', !p.isValid);
+          return alert("Some entries have errors or missing notes. Fix highlighted rows to proceed.");
         }
-      });
-    }
 
-    // --- EXECUTION ---
-    if (newEntries.length > 0) {
-      await db.events.bulkAdd(newEntries);
-
-      if (shouldTriggerDownload) this.downloadTimelineICS(topic);
-
-      await this.updateTopicSuggestions();
-      document.getElementById('eventForm').reset();
-
-      if (isBulkMode) {
-        document.getElementById('bulkRowContainer').innerHTML = "";
-        this.addBulkRow();
+        newEntries.push({ eventType: topic, whenVal: p.whenVal, desc: rowDesc, timestamp: p.timestamp, isSynced: sync });
+        if (sync) shouldTriggerDownload = true;
       }
-
-      this.handleDateTypeChange('date');
-      this.render();
-      alert(`Saved ${newEntries.length} entries to ${topic}`);
-    } else {
-      alert("Please ensure dates are correct (Ex: 5, 1526, or 01-01-2000)");
     }
+
+    // --- FINAL EXECUTION (Only reached if validations pass) ---
+    await db.events.bulkAdd(newEntries);
+
+    if (shouldTriggerDownload) this.downloadTimelineICS(topic);
+
+    await this.updateTopicSuggestions();
+    document.getElementById('eventForm').reset();
+
+    if (isBulkMode) {
+      document.getElementById('bulkRowContainer').innerHTML = "";
+      this.addBulkRow(); // Reset with one empty row
+    }
+
+    this.handleDateTypeChange('date');
+    this.render();
+    alert(`Successfully saved ${newEntries.length} entries to ${topic}`);
   },
 
   // Custom HTML rendering for the hanging suggestions
